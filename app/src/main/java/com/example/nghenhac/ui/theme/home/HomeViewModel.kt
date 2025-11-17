@@ -5,8 +5,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nghenhac.data.PlaylistResponse
 import com.example.nghenhac.data.PlaylistSummaryDTO
+import com.example.nghenhac.data.SongResponseDTO
 import com.example.nghenhac.network.RetrofitClient
 import com.example.nghenhac.repository.HomeRepository
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +18,7 @@ import kotlinx.coroutines.launch
 data class HomeUiState(
     val isLoading: Boolean = true,
     val playlists: List<PlaylistSummaryDTO> = emptyList(),
+    val songs: List<SongResponseDTO> = emptyList(),
     val error: String? = null
 )
 
@@ -34,20 +37,27 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         homeRepository = HomeRepository(apiService)
 
         // Tải playlist ngay khi ViewModel được tạo
-        fetchMyPlaylists()
+        fetchAllHomeData()
     }
 
     /**
      * Gọi API để lấy playlist
      */
-    fun fetchMyPlaylists() {
+    fun fetchAllHomeData() {
         _uiState.value = HomeUiState(isLoading = true) // Bắt đầu loading
 
         viewModelScope.launch {
             try {
+                val playlistsDeferred = async { homeRepository.getMyPlaylists() }
+                val songsDeferred = async { homeRepository.getAllSongs() }
                 // AuthInterceptor sẽ tự động thêm token vào request này
-                val playlists = homeRepository.getMyPlaylists()
-                _uiState.value = HomeUiState(isLoading = false, playlists = playlists)
+                val playlists = playlistsDeferred.await()
+                val songs = songsDeferred.await()
+                _uiState.value = HomeUiState(
+                    isLoading = false,
+                    playlists = playlists,
+                    songs = songs
+                )
             } catch (e: Exception) {
                 // Xử lý lỗi (ví dụ: token hết hạn -> 401 Unauthorized)
                 _uiState.value = HomeUiState(isLoading = false, error = e.message)

@@ -13,7 +13,6 @@ class AuthRepository(
     private val apiService: ApiService,
     private val tokenManager: TokenManager
 ) {
-    val authToken = tokenManager.getToken()
 
     suspend fun login(request: LoginRequest): LoginResponse {
         val response = apiService.login(request)

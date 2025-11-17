@@ -9,9 +9,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    // ⚠️ THAY THẾ BẰNG ĐỊA CHỈ IP CỦA BẠN
-    // KHÔNG dùng "localhost" hay "127.0.0.1"
-    // Hãy dùng địa chỉ IP LAN (ví dụ: 192.168.1.8)
     private const val BASE_URL = "http://192.168.1.14:8080/"
 
     fun create(context: Context): ApiService {
@@ -28,6 +25,8 @@ object RetrofitClient {
         val okHttpClient = OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(tokenManager)) // Gắn bộ chặn token
             .addInterceptor(logging) // Gắn bộ log
+            .followRedirects(false)
+            .followSslRedirects(false)
             .build()
 
         // Tạo Retrofit
