@@ -5,6 +5,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
+import androidx.compose.material.icons.filled.PlaylistAdd
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +30,8 @@ import com.example.nghenhac.R
 @Composable
 fun SongListItem(
     song: SongResponseDTO,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onAddClick: () -> Unit
 ) {
     // Tạo khoảng cách nhỏ giữa các bài
     Spacer(modifier = Modifier.height(4.dp))
@@ -60,6 +66,15 @@ fun SongListItem(
                     .size(56.dp)
                     .clip(ShapeDefaults.Small)
             )
+        },
+        trailingContent = {
+            IconButton(onClick = onAddClick) {
+                Icon(
+                    imageVector = Icons.Default.PlaylistAdd,
+                    contentDescription = "Thêm vào playlist",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         },
         colors = ListItemDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
