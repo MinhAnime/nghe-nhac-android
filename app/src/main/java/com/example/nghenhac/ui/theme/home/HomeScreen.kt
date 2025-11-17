@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +22,8 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.nghenhac.R
 import com.example.nghenhac.data.PlaylistSummaryDTO
+import com.example.nghenhac.ui.theme.components.AddToPlaylistSheet
+import com.example.nghenhac.ui.theme.components.CreatePlaylistDialog
 import com.example.nghenhac.ui.theme.player.SharedPlayerViewModel
 import com.example.nghenhac.ui.theme.player.convertSongsToMediaItems
 import com.example.nghenhac.ui.theme.components.SongListItem
@@ -41,6 +45,12 @@ fun HomeScreen(
             homeViewModel.clearError()
         }
     }
+    LaunchedEffect(Unit) {
+        homeViewModel.messageFlow.collect { message ->
+            // Chỉ hiện Toast khi ViewModel bảo thành công
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -51,6 +61,15 @@ fun HomeScreen(
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { homeViewModel.openCreateDialog() },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Tạo Playlist")
+            }
         }
     ) { paddingValues ->
 
@@ -120,19 +139,36 @@ fun HomeScreen(
                             SongListItem(
                                 song = song,
                                 onClick = {
-                                    // 1. Convert dữ liệu
                                     val mediaItems = convertSongsToMediaItems(uiState.songs)
-                                    // 2. Gọi ViewModel chung để phát nhạc
                                     playerViewModel.playQueue(
                                         queue = mediaItems,
                                         startIndex = index
                                     )
+                                },
+                                onAddClick = {
+                                    homeViewModel.openAddSongSheet(song)
                                 }
                             )
                         }
                     }
                 }
             }
+        }
+        if (homeViewModel.isCreatePlaylistDialogOpen) {
+            CreatePlaylistDialog(
+                onDismiss = { homeViewModel.closeAddSongSheet()},
+                onConfirm = { name -> homeViewModel.createPlaylist(name)}
+            )
+        }
+        homeViewModel.selectedSongToAdd?.let { song ->
+            AddToPlaylistSheet(
+                song = song,
+                playlists = uiState.playlists,
+                onPlaylistSelected = { playlistId ->
+                    homeViewModel.addSongToPlaylist(playlistId)
+                },
+                onDismiss = { homeViewModel.closeAddSongSheet() }
+            )
         }
     }
 }
