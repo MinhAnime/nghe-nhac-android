@@ -1,6 +1,9 @@
 package com.example.nghenhac.ui.theme.home
 
 import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nghenhac.data.PlaylistResponse
@@ -9,9 +12,11 @@ import com.example.nghenhac.data.SongResponseDTO
 import com.example.nghenhac.network.RetrofitClient
 import com.example.nghenhac.repository.HomeRepository
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 
@@ -26,9 +31,15 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val homeRepository: HomeRepository
 
-    // Trạng thái (State) của UI
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
+
+    var isCreatePlaylistDialogOpen by mutableStateOf(false)
+
+    var selectedSongToAdd: SongResponseDTO? by mutableStateOf(null)
+
+    private val _messageChannel = Channel<String>()
+    val messageFlow = _messageChannel.receiveAsFlow()
 
     init {
         // Khởi tạo Repository
@@ -36,7 +47,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         val apiService = RetrofitClient.create(application.applicationContext)
         homeRepository = HomeRepository(apiService)
 
-        // Tải playlist ngay khi ViewModel được tạo
         fetchAllHomeData()
     }
 
@@ -64,6 +74,39 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    fun createPlaylist(name: String) {
+        viewModelScope.launch {
+            try {
+                homeRepository.createPlaylist(name)
+                // Tạo xong thì tải lại danh sách để thấy playlist mới
+                fetchAllHomeData()
+                isCreatePlaylistDialogOpen = false
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Lỗi tạo playlist: ${e.message}")
+            }
+        }
+    }
+
+    fun addSongToPlaylist(playlistId: Long) {
+        val song = selectedSongToAdd ?: return
+
+        viewModelScope.launch {
+            try {
+                homeRepository.addSongToPlaylist(playlistId, song.id)
+                selectedSongToAdd = null
+                _messageChannel.send("Đã thêm bài hát thành công!")
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Lỗi thêm nhạc: ${e.message}")
+            }
+        }
+    }
+
+    fun openCreateDialog() { isCreatePlaylistDialogOpen = true }
+    fun closeCreateDialog() { isCreatePlaylistDialogOpen = false }
+
+    fun openAddSongSheet(song: SongResponseDTO) { selectedSongToAdd = song }
+    fun closeAddSongSheet() { selectedSongToAdd = null }
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
