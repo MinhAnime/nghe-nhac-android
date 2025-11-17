@@ -1,5 +1,7 @@
 package com.example.nghenhac.repository
 
+import com.example.nghenhac.data.AddSongRequest
+import com.example.nghenhac.data.CreatePlaylistRequest
 import com.example.nghenhac.data.PlaylistDetailDTO
 import com.example.nghenhac.data.PlaylistSummaryDTO
 import com.example.nghenhac.data.SongResponseDTO
@@ -15,6 +17,14 @@ class HomeRepository(private  val apiService: ApiService) {
 
     suspend fun getPlaylistDetails(playlistId: Long): PlaylistDetailDTO {
         return apiService.getPlaylistDetails(playlistId)
+    }
+
+    suspend fun createPlaylist(name: String) {
+        apiService.createPlaylist(CreatePlaylistRequest(name))
+    }
+
+    suspend fun addSongToPlaylist(playlistId: Long, songId: Long) {
+        apiService.addSongToPlaylist(playlistId, AddSongRequest(songId))
     }
     suspend fun getSongStreamUrl(songId: Long): String {
         val response = apiService.getSongStreamUrl(songId)
