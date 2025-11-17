@@ -1,5 +1,7 @@
 package com.example.nghenhac.network
 
+import com.example.nghenhac.data.AddSongRequest
+import com.example.nghenhac.data.CreatePlaylistRequest
 import com.example.nghenhac.data.LoginRequest
 import com.example.nghenhac.data.LoginResponse
 import com.example.nghenhac.data.PlaylistDetailDTO
@@ -31,4 +33,13 @@ interface ApiService {
 
     @GET("/api/v1/songs")
     suspend fun getAllSongs(): List<SongResponseDTO>
+
+    @POST("/api/v1/playlists")
+    suspend fun createPlaylist(@Body request: CreatePlaylistRequest): PlaylistSummaryDTO
+
+    @POST("/api/v1/playlists/{playlistId}/songs")
+    suspend fun addSongToPlaylist(
+        @Path("playlistId") playlistId: Long,
+        @Body request: AddSongRequest
+    ): PlaylistDetailDTO
 }
