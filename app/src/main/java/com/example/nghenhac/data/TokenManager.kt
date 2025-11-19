@@ -5,45 +5,34 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-
 
 val Context.dataStore by preferencesDataStore(name = "auth_prefs")
 
 class TokenManager(private val context: Context) {
 
     companion object {
+        // Định nghĩa KEY là kiểu String
         private val TOKEN_KEY = stringPreferencesKey("jwt_token")
     }
 
-    // Cache token trong RAM
-    @Volatile
-    private var cachedToken: String? = null
-
-    // Lấy token đồng bộ cho Interceptor
-    fun getToken(): String? = cachedToken
-
-    // Chỉ gọi 1 lần khi App khởi động
-    suspend fun loadToken() {
-        cachedToken = context.dataStore.data
-            .map { it[TOKEN_KEY] }
-            .firstOrNull()
-    }
-
-    // Lưu token và update RAM
-    suspend fun saveToken(token: String) {
-        cachedToken = token
-        context.dataStore.edit { prefs ->
-            prefs[TOKEN_KEY] = token
+    fun getTokenFlow(): Flow<String?> {
+        return context.dataStore.data.map { preferences ->
+            preferences[TOKEN_KEY] // Trả về String? hoặc null
         }
     }
 
-    // Xóa token
+    // Lưu token vào Disk
+    suspend fun saveToken(token: String) {
+        context.dataStore.edit { preferences ->
+            preferences[TOKEN_KEY] = token
+        }
+    }
+
+    // Xóa token khỏi Disk
     suspend fun deleteToken() {
-        cachedToken = null
-        context.dataStore.edit { prefs ->
-            prefs.remove(TOKEN_KEY)
+        context.dataStore.edit { preferences ->
+            preferences.remove(TOKEN_KEY)
         }
     }
 }
