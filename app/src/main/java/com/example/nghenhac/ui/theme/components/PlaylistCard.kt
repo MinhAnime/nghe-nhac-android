@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,7 +24,8 @@ import com.example.nghenhac.data.PlaylistSummaryDTO
 fun PlaylistCard(
     playlist: PlaylistSummaryDTO,
     onClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onRenameClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
@@ -55,6 +57,11 @@ fun PlaylistCard(
 
                 MoreOptionsButton(
                     menuItems = listOf(
+                        MenuItemData(
+                            text = "Đổi tên",
+                            icon = { Icon(Icons.Default.Edit, null) },
+                            onClick = onRenameClick
+                        ),
                         MenuItemData(
                             text = "Xóa Playlist",
                             icon = { Icon(Icons.Default.Cancel, contentDescription = null) },

@@ -34,6 +34,7 @@ import com.example.nghenhac.ui.theme.components.CreatePlaylistDialog
 import com.example.nghenhac.ui.theme.components.MenuItemData
 import com.example.nghenhac.ui.theme.components.MoreOptionsButton
 import com.example.nghenhac.ui.theme.components.PlaylistCard
+import com.example.nghenhac.ui.theme.components.RenamePlaylistDialog
 import com.example.nghenhac.ui.theme.components.SongListItem
 import com.example.nghenhac.ui.theme.player.SharedPlayerViewModel
 import com.example.nghenhac.ui.theme.player.convertSongsToMediaItems
@@ -124,7 +125,8 @@ fun HomeScreen(
                                         onClick = { onPlaylistClick(playlist) },
                                         onDeleteClick = {
                                             homeViewModel.openDeleteDialog(playlist)
-                                        }
+                                        },
+                                        onRenameClick = { homeViewModel.openRenameDialog(playlist) }
                                     )
                                 }
 
@@ -239,6 +241,15 @@ fun HomeScreen(
                     TextButton(onClick = { homeViewModel.closeDeleteDialog() }) {
                         Text("Hủy")
                     }
+                }
+            )
+        }
+        homeViewModel.playlistToRename?.let { playlist ->
+            RenamePlaylistDialog(
+                currentName = playlist.name,
+                onDismiss = { homeViewModel.closeRenameDialog() },
+                onConfirm = { newName ->
+                    homeViewModel.renamePlaylist(newName)
                 }
             )
         }
