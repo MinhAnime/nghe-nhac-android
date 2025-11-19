@@ -45,6 +45,8 @@ class PlaylistDetailViewModel(
     var isLastPage = false
     var isLoadingMore = false
 
+    var showRenameDialog by mutableStateOf(false)
+    var showDeleteDialog by mutableStateOf(false)
     init {
         val apiService = RetrofitClient.create(application.applicationContext)
         repository = HomeRepository(apiService)
@@ -192,6 +194,35 @@ class PlaylistDetailViewModel(
         }
     }
 
+    fun renamePlaylist(newName: String) {
+        viewModelScope.launch {
+            try {
+                repository.renamePlaylist(playlistId, newName)
+
+                // Cập nhật UI ngay lập tức
+                val currentPlaylist = _uiState.value.playlist
+                if (currentPlaylist != null) {
+                    _uiState.value = _uiState.value.copy(
+                        playlist = currentPlaylist.copy(name = newName)
+                    )
+                }
+                showRenameDialog = false
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+    fun deletePlaylist(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                repository.deletePlaylist(playlistId)
+                // Xóa xong thì gọi callback để thoát màn hình
+                onSuccess()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
     // Hàm xử lý lỗi thân thiện (Copy từ HomeViewModel)
     private fun parseErrorMessage(e: Exception): String {
         return if (e is HttpException && e.code() == 400) {
