@@ -4,6 +4,7 @@ import com.example.nghenhac.data.AddSongRequest
 import com.example.nghenhac.data.CreatePlaylistRequest
 import com.example.nghenhac.data.PlaylistDetailDTO
 import com.example.nghenhac.data.PlaylistSummaryDTO
+import com.example.nghenhac.data.RenamePlaylistRequest
 import com.example.nghenhac.data.SongResponseDTO
 import com.example.nghenhac.network.ApiService
 
@@ -19,8 +20,9 @@ class HomeRepository(private  val apiService: ApiService) {
         return apiService.getPlaylistDetails(playlistId)
     }
 
-    suspend fun createPlaylist(name: String) {
-        apiService.createPlaylist(CreatePlaylistRequest(name))
+    suspend fun createPlaylist(name: String): PlaylistSummaryDTO { // <-- Trả về DTO
+        val request = CreatePlaylistRequest(name)
+        return apiService.createPlaylist(request) // Return kết quả từ API
     }
 
     suspend fun addSongToPlaylist(playlistId: Long, songId: Long) {
@@ -55,6 +57,11 @@ class HomeRepository(private  val apiService: ApiService) {
     }
     suspend fun searchSongs(query: String): List<SongResponseDTO> {
         return apiService.searchSongs(query)
+    }
+
+    suspend fun renamePlaylist(playlistId: Long, newName: String) {
+        val request = RenamePlaylistRequest(newName)
+        apiService.renamePlaylist(playlistId, request)
     }
 
 
