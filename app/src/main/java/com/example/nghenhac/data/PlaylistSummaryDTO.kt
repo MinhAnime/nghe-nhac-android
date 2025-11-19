@@ -4,5 +4,5 @@ data class PlaylistSummaryDTO(
     val id: Long,
     val name: String,
     val ownerUsername: String,
-    val coverArtUrl: String?
+    val thumbnails: List<String> = emptyList()
 )
