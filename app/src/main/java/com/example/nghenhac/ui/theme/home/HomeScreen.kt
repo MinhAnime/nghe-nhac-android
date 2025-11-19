@@ -123,10 +123,6 @@ fun HomeScreen(
                                     PlaylistCard(
                                         playlist = playlist,
                                         onClick = { onPlaylistClick(playlist) },
-                                        onDeleteClick = {
-                                            homeViewModel.openDeleteDialog(playlist)
-                                        },
-                                        onRenameClick = { homeViewModel.openRenameDialog(playlist) }
                                     )
                                 }
 
@@ -217,40 +213,6 @@ fun HomeScreen(
                     homeViewModel.addSongToPlaylist(playlistId)
                 },
                 onDismiss = { homeViewModel.closeAddSongSheet() }
-            )
-        }
-
-        homeViewModel.playlistToDelete?.let { playlist ->
-            AlertDialog(
-                onDismissRequest = { homeViewModel.closeDeleteDialog() },
-                title = { Text("Xóa Playlist?") },
-                text = { Text("Bạn có chắc chắn muốn xóa '${playlist.name}' không?") },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            homeViewModel.deletePlaylist()
-                        },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text("Xóa")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { homeViewModel.closeDeleteDialog() }) {
-                        Text("Hủy")
-                    }
-                }
-            )
-        }
-        homeViewModel.playlistToRename?.let { playlist ->
-            RenamePlaylistDialog(
-                currentName = playlist.name,
-                onDismiss = { homeViewModel.closeRenameDialog() },
-                onConfirm = { newName ->
-                    homeViewModel.renamePlaylist(newName)
-                }
             )
         }
     }
