@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
@@ -82,7 +83,7 @@ fun FullScreenPlayer(
             onClick = onClose,
             modifier = Modifier.align(Alignment.Start)
         ) {
-            Icon(Icons.Default.Close, contentDescription = "Đóng")
+            Icon(Icons.Default.ExpandMore, contentDescription = "Đóng")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
