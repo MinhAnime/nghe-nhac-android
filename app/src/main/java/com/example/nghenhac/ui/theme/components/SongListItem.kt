@@ -31,7 +31,7 @@ import com.example.nghenhac.R
 fun SongListItem(
     song: SongResponseDTO,
     onClick: () -> Unit,
-    onAddClick: () -> Unit
+    menuItems: List<MenuItemData> = emptyList()
 ) {
     // Tạo khoảng cách nhỏ giữa các bài
     Spacer(modifier = Modifier.height(4.dp))
@@ -68,12 +68,8 @@ fun SongListItem(
             )
         },
         trailingContent = {
-            IconButton(onClick = onAddClick) {
-                Icon(
-                    imageVector = Icons.Default.PlaylistAdd,
-                    contentDescription = "Thêm vào playlist",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            if (menuItems.isNotEmpty()) {
+                MoreOptionsButton(menuItems = menuItems)
             }
         },
         colors = ListItemDefaults.colors(
