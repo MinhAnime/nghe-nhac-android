@@ -1,11 +1,12 @@
 package com.example.nghenhac.network
 
 import android.content.Context
-import com.example.nghenhac.data.TokenManager
+// import com.example.nghenhac.data.TokenManager // <-- Xóa dòng này nếu không dùng
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit // Nên thêm timeout
 
 object RetrofitClient {
 
@@ -13,23 +14,21 @@ object RetrofitClient {
 
     fun create(context: Context): ApiService {
 
-        // Khởi tạo TokenManager
-        val tokenManager = TokenManager(context.applicationContext)
 
-        // Tạo Interceptor log
+
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
-        // Tạo Client, gắn AuthInterceptor và Logging
         val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(tokenManager)) // Gắn bộ chặn token
-            .addInterceptor(logging) // Gắn bộ log
+            .addInterceptor(AuthInterceptor())
+            .addInterceptor(logging)
             .followRedirects(false)
             .followSslRedirects(false)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
-        // Tạo Retrofit
         val retrofit = Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
