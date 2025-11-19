@@ -8,11 +8,11 @@ import com.example.nghenhac.data.SongResponseDTO
 import com.example.nghenhac.network.ApiService
 
 class HomeRepository(private  val apiService: ApiService) {
-    suspend fun getMyPlaylists(): List<PlaylistSummaryDTO> {
-        return apiService.getMyPlaylists()
+    suspend fun getMyPlaylists(page: Int = 0): List<PlaylistSummaryDTO> {
+        return apiService.getMyPlaylists(page = page)
     }
-    suspend fun getAllSongs(): List<SongResponseDTO> {
-        return apiService.getAllSongs()
+    suspend fun getAllSongs(page: Int = 0): List<SongResponseDTO> {
+        return apiService.getAllSongs(page = page)
     }
 
     suspend fun getPlaylistDetails(playlistId: Long): PlaylistDetailDTO {
@@ -25,6 +25,9 @@ class HomeRepository(private  val apiService: ApiService) {
 
     suspend fun addSongToPlaylist(playlistId: Long, songId: Long) {
         apiService.addSongToPlaylist(playlistId, AddSongRequest(songId))
+    }
+    suspend fun getSongsInPlaylist(playlistId: Long, page: Int): List<SongResponseDTO> {
+        return apiService.getSongsInPlaylist(playlistId, page, size = 20)
     }
     suspend fun getSongStreamUrl(songId: Long): String {
         val response = apiService.getSongStreamUrl(songId)
@@ -41,6 +44,17 @@ class HomeRepository(private  val apiService: ApiService) {
             // Nếu API trả về 200 OK (hoặc lỗi 404, 500) là BẤT THƯỜNG
             throw Exception("Lỗi khi lấy link nhạc, server không redirect. Code: ${response.code()}")
         }
+    }
+
+    suspend fun deletePlaylist(playlistId: Long) {
+        apiService.deletePlaylist(playlistId)
+    }
+
+    suspend fun removeSongFromPlaylist(playlistId: Long, songId: Long) {
+        apiService.removeSongFromPlaylist(playlistId, songId)
+    }
+    suspend fun searchSongs(query: String): List<SongResponseDTO> {
+        return apiService.searchSongs(query)
     }
 
 
