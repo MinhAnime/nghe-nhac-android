@@ -7,6 +7,7 @@ import com.example.nghenhac.data.LoginResponse
 import com.example.nghenhac.data.PlaylistDetailDTO
 import com.example.nghenhac.data.PlaylistSummaryDTO
 import com.example.nghenhac.data.RegisterRequest
+import com.example.nghenhac.data.RenamePlaylistRequest
 import com.example.nghenhac.data.SongResponseDTO
 import com.example.nghenhac.data.UserResponse
 import retrofit2.Response
@@ -14,6 +15,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -70,4 +72,9 @@ interface ApiService {
     @GET("/api/v1/songs/search")
     suspend fun searchSongs(@Query("q") query: String): List<SongResponseDTO>
 
+    @PUT("/api/v1/playlists/{playlistId}")
+    suspend fun renamePlaylist(
+        @Path("playlistId") playlistId: Long,
+        @Body request: RenamePlaylistRequest
+    ): Any
 }
