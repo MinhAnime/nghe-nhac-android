@@ -41,8 +41,6 @@ fun HomeScreen(
     playerViewModel: SharedPlayerViewModel,
     onPlaylistClick: (PlaylistSummaryDTO) -> Unit,
     homeViewModel: HomeViewModel = viewModel(),
-    onLogoutClick: () -> Unit,
-    onSearchClick: () -> Unit
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -69,35 +67,8 @@ fun HomeScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                actions = {
-
-                    IconButton(onClick = {
-                        // Gọi callback để chuyển màn hình (cần thêm tham số onSearchClick vào HomeScreen)
-                        onSearchClick()
-                    }) {
-                        Icon(Icons.Default.Search, contentDescription = "Tìm kiếm")
-                    }
-
-                    IconButton(onClick = {
-                        onLogoutClick()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.ExitToApp,
-                            contentDescription = "Đăng xuất"
-                        )
-                    }
-                }
+                )
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { homeViewModel.openCreateDialog() },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Tạo Playlist")
-            }
         }
     ) { paddingValues ->
 
