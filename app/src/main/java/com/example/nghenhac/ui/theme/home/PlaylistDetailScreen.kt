@@ -1,16 +1,20 @@
 package com.example.nghenhac.ui.theme.home
 
 import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlaylistAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -18,8 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.example.nghenhac.ui.theme.components.AddToPlaylistSheet
+import com.example.nghenhac.ui.theme.components.MenuItemData
 import com.example.nghenhac.ui.theme.components.SongListItem
 import com.example.nghenhac.ui.theme.player.SharedPlayerViewModel
 
@@ -27,22 +31,37 @@ import com.example.nghenhac.ui.theme.player.SharedPlayerViewModel
 @Composable
 fun PlaylistDetailScreen(
     viewModel: PlaylistDetailViewModel = viewModel(),
-    sharedPlayerViewModel: SharedPlayerViewModel
+    sharedPlayerViewModel: SharedPlayerViewModel,
+    onBackClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(uiState.playlist?.name ?: "Đang tải...") })
+            TopAppBar(
+                title = { Text(uiState.playlist?.name ?: "Đang tải...") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Quay lại"
+                        )
+                    }
+                }
+            )
         }
     ) { paddingValues -> // <-- Đây là padding của TopBar
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues), // Áp dụng padding vào Box
-            contentAlignment = Alignment.Center // Căn giữa cho cả Box
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center
         ) {
             when {
                 uiState.isLoading -> {
@@ -52,21 +71,43 @@ fun PlaylistDetailScreen(
                     Text(text = "Lỗi: ${uiState.error}")
                 }
                 uiState.playlist != null -> {
-                    // Hiển thị danh sách bài hát
                     LazyColumn(
-                        // Xóa padding ở đây vì Box đã xử lý
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        itemsIndexed(uiState.playlist!!.songs) { index, song ->
+                        itemsIndexed(uiState.songs) { index, song ->
                             SongListItem(
                                 song = song,
                                 onClick = {
                                     viewModel.onSongSelected(index, sharedPlayerViewModel)
                                 },
-                                onAddClick = {
-                                    viewModel.openAddSongSheet(song)
-                                }
+                                menuItems = listOf(
+                                    MenuItemData(
+                                        text = "Xóa khỏi Playlist",
+                                        icon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
+                                        onClick = { viewModel.removeSongFromPlaylist(song.id) }
+                                    ),
+                                    MenuItemData(text = "Thêm vào Playlist khác",
+                                        icon = { Icon(Icons.Default.PlaylistAdd, null) },
+                                        onClick = { viewModel.openAddSongSheet(song) })
+                                )
                             )
+                            if (index >= uiState.songs.size - 1 && !viewModel.isLastPage && !viewModel.isLoadingMore) {
+                                LaunchedEffect(Unit) {
+                                    viewModel.loadMore()
+                                }
+                            }
+                        }
+                        if (viewModel.isLoadingMore) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
                         }
                     }
                 }
