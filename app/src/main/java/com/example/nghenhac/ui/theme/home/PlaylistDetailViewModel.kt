@@ -28,6 +28,7 @@ import com.example.nghenhac.ui.theme.player.SharedPlayerViewModel
 data class PlaylistDetailState(
     val isLoading: Boolean = true,
     val playlist: PlaylistDetailDTO? = null,
+    val songs: List<SongResponseDTO> = emptyList(),
     val myPlaylists: List<PlaylistSummaryDTO> = emptyList(),
     val error: String? = null
 )
@@ -45,13 +46,57 @@ class PlaylistDetailViewModel(
 
     var selectedSongToAdd: SongResponseDTO? by mutableStateOf(null)
 
+    private var currentPage = 0
+    var isLastPage = false
+    var isLoadingMore = false
+
 
     init {
         val apiService = RetrofitClient.create(application.applicationContext)
         repository = HomeRepository(apiService)
         fetchPlaylistDetails()
-
+        fetchSongs(page = 0)
         fetchMyPlayLists()
+
+    }
+
+    fun fetchSongs(page: Int) {
+        if (page == 0) {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+        }
+
+        viewModelScope.launch {
+            try {
+                val newSongs = repository.getSongsInPlaylist(playlistId, page)
+
+                if (newSongs.isNotEmpty()) {
+                    val currentSongs = _uiState.value.songs
+                    val combinedSongs = currentSongs + newSongs
+
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        songs = combinedSongs
+                    )
+                    // Cập nhật trang hiện tại
+                    currentPage = page
+                } else {
+                    // Nếu trả về rỗng -> Đã hết dữ liệu
+                    isLastPage = true
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
+            } finally {
+                isLoadingMore = false // Đảm bảo tắt cờ loading
+            }
+        }
+    }
+
+    fun loadMore() {
+        if (isLoadingMore || isLastPage) return
+
+        isLoadingMore = true
+        fetchSongs(currentPage + 1)
     }
 
     private fun fetchPlaylistDetails() {
@@ -113,6 +158,22 @@ class PlaylistDetailViewModel(
                 selectedSongToAdd = null // Đóng sheet
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = "Lỗi thêm nhạc: ${e.message}")
+            }
+        }
+    }
+    fun removeSongFromPlaylist(songId: Long) {
+        viewModelScope.launch {
+            try {
+                // Gọi xuống Repository
+                repository.removeSongFromPlaylist(playlistId, songId)
+
+                // Cập nhật lại danh sách bài hát trên UI ngay lập tức (Client-side update)
+                // để người dùng không phải chờ tải lại
+                val updatedList = _uiState.value.songs.filter { it.id != songId }
+                _uiState.value = _uiState.value.copy(songs = updatedList)
+
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Lỗi xóa bài: ${e.message}")
             }
         }
     }
