@@ -223,9 +223,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    fun openDeleteDialog(playlist: PlaylistSummaryDTO) {
-        playlistToDelete = playlist
-    }
 
     fun closeDeleteDialog() {
         playlistToDelete = null}
@@ -269,43 +266,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             }
         } else {
             e.message ?: "Lỗi không xác định"
-        }
-    }
-
-    fun openRenameDialog(playlist: PlaylistSummaryDTO) {
-        playlistToRename = playlist
-    }
-
-    fun closeRenameDialog() {
-        playlistToRename = null
-    }
-
-    fun renamePlaylist(newName: String) {
-        val playlist = playlistToRename ?: return
-
-        viewModelScope.launch {
-            try {
-                // 1. Gọi API
-                homeRepository.renamePlaylist(playlist.id, newName)
-
-                // 2. Cập nhật UI Cục bộ (Client-side update)
-                val currentPlaylists = _uiState.value.playlists
-                val updatedPlaylists = currentPlaylists.map {
-                    if (it.id == playlist.id) {
-                        it.copy(name = newName) // Đổi tên trong list
-                    } else {
-                        it
-                    }
-                }
-
-                _uiState.value = _uiState.value.copy(playlists = updatedPlaylists)
-
-                _messageChannel.send("Đã đổi tên thành: $newName")
-                closeRenameDialog()
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = "Lỗi đổi tên: ${e.message}")
-                closeRenameDialog()
-            }
         }
     }
 }
