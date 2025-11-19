@@ -24,8 +24,6 @@ import com.example.nghenhac.data.PlaylistSummaryDTO
 fun PlaylistCard(
     playlist: PlaylistSummaryDTO,
     onClick: () -> Unit,
-    onDeleteClick: () -> Unit,
-    onRenameClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
@@ -53,21 +51,6 @@ fun PlaylistCard(
                         .weight(1f)
                         .fillMaxWidth()
                         .basicMarquee()
-                )
-
-                MoreOptionsButton(
-                    menuItems = listOf(
-                        MenuItemData(
-                            text = "Đổi tên",
-                            icon = { Icon(Icons.Default.Edit, null) },
-                            onClick = onRenameClick
-                        ),
-                        MenuItemData(
-                            text = "Xóa Playlist",
-                            icon = { Icon(Icons.Default.Cancel, contentDescription = null) },
-                            onClick = onDeleteClick
-                        )
-                    )
                 )
             }
         }
