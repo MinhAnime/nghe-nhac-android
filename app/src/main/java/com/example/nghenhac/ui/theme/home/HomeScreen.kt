@@ -1,6 +1,7 @@
 package com.example.nghenhac.ui.theme.home
 
 import android.widget.Toast
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -20,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -31,6 +33,7 @@ import com.example.nghenhac.ui.theme.components.AddToPlaylistSheet
 import com.example.nghenhac.ui.theme.components.CreatePlaylistDialog
 import com.example.nghenhac.ui.theme.components.MenuItemData
 import com.example.nghenhac.ui.theme.components.MoreOptionsButton
+import com.example.nghenhac.ui.theme.components.PlaylistCard
 import com.example.nghenhac.ui.theme.components.SongListItem
 import com.example.nghenhac.ui.theme.player.SharedPlayerViewModel
 import com.example.nghenhac.ui.theme.player.convertSongsToMediaItems
@@ -63,7 +66,13 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Trang chủ") },
+                title = {
+                    Text(
+                        text = "Nghe nhạc",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
@@ -89,7 +98,10 @@ fun HomeScreen(
                         Text(
                             text = "Playlist của bạn",
                             style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(start = 16.dp,
+                                end = 16.dp,
+                                top = 1.dp,
+                                bottom = 8.dp)
                         )
                     }
 
@@ -229,59 +241,6 @@ fun HomeScreen(
                     }
                 }
             )
-        }
-    }
-}
-
-@Composable
-fun PlaylistCard(
-    playlist: PlaylistSummaryDTO,
-    onClick: () -> Unit,
-    onDeleteClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.size(160.dp)
-    ) {
-        Column {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(playlist.coverArtUrl)
-                    .crossfade(true)
-                    .placeholder(R.drawable.ic_launcher_background)
-                    .error(R.drawable.ic_launcher_background)
-                    .build(),
-                contentDescription = playlist.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth(1f)
-                    .weight(1f)
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 0.dp, top = 4.dp, bottom = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = playlist.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-
-                MoreOptionsButton(
-                    menuItems = listOf(
-                        MenuItemData(
-                            text = "Xóa Playlist",
-                            icon = { Icon(Icons.Default.Cancel, contentDescription = null) },
-                            onClick = onDeleteClick
-                        )
-                    )
-                )
-            }
         }
     }
 }
