@@ -32,20 +32,13 @@ fun PlaylistCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = Modifier.size(160.dp)
+        modifier = Modifier.size(140.dp)
     ) {
         Column {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(playlist.coverArtUrl)
-                    .crossfade(true)
-                    .placeholder(R.drawable.ic_launcher_background)
-                    .error(R.drawable.ic_launcher_background)
-                    .build(),
-                contentDescription = playlist.name,
-                contentScale = ContentScale.Crop,
+            PlaylistCoverGrid(
+                images = playlist.thumbnails,
                 modifier = Modifier
-                    .fillMaxWidth(1f)
+                    .fillMaxWidth()
                     .weight(1f)
             )
             Row(
