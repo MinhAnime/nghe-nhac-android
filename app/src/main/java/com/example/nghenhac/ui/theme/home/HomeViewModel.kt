@@ -1,6 +1,8 @@
 package com.example.nghenhac.ui.theme.home
 
 import android.app.Application
+import android.content.ContentValues.TAG
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -53,6 +55,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     var isLastSongPage = false
     var isLoadingMoreSongs = false
     var playlistToDelete: PlaylistSummaryDTO? by mutableStateOf(null)
+
+    var playlistToRename: PlaylistSummaryDTO? by mutableStateOf(null)
 
     init {
         // Khởi tạo Repository
@@ -152,10 +156,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun createPlaylist(name: String) {
         viewModelScope.launch {
             try {
-                homeRepository.createPlaylist(name)
-                // Tạo xong thì tải lại danh sách để thấy playlist mới
-                fetchAllHomeData()
+                // 1. Nhận playlist vừa tạo từ API
+                val newPlaylist = homeRepository.createPlaylist(name)
+
+                // 2. Chèn vào đầu danh sách hiện tại (Client-side update)
+                val currentList = _uiState.value.playlists
+                val newList = listOf(newPlaylist) + currentList
+
+                _uiState.value = _uiState.value.copy(playlists = newList)
+
                 isCreatePlaylistDialogOpen = false
+                _messageChannel.send("Tạo playlist thành công!")
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = "Lỗi tạo playlist: ${e.message}")
             }
@@ -167,16 +178,50 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
+                // 1. Gọi API (Server cập nhật DB)
                 homeRepository.addSongToPlaylist(playlistId, song.id)
+
+                // --- BẮT ĐẦU SỬA: CẬP NHẬT UI CỤC BỘ (Client-side Update) ---
+
+                // Tìm playlist vừa được thêm nhạc trong danh sách hiện tại
+                val currentPlaylists = _uiState.value.playlists
+                val updatedPlaylists = currentPlaylists.map { playlist ->
+                    if (playlist.id == playlistId) {
+                        // Nếu đúng là playlist này, ta cập nhật list thumbnails của nó
+                        val newCoverUrl = song.coverArtUrl
+
+                        val currentThumbnails = playlist.thumbnails ?: emptyList()
+
+                        // Logic: Nếu bài hát có ảnh, thêm nó vào danh sách thumbnails hiện có
+                        val newThumbnails = if (newCoverUrl != null) {
+                            // Thêm vào đầu hoặc cuối tùy bạn (ở đây thêm vào cuối)
+                            // Take(4) để đảm bảo không lưu quá nhiều URL thừa
+                            (playlist.thumbnails + newCoverUrl).take(4)
+                        } else {
+                            currentThumbnails
+                        }
+
+                        // Tạo bản sao playlist mới với thumbnails mới
+                        playlist.copy(_thumbnails = newThumbnails)
+                    } else {
+                        playlist
+                    }
+                }
+
+                // Cập nhật State để UI vẽ lại ngay lập tức
+                _uiState.value = _uiState.value.copy(playlists = updatedPlaylists)
+
+                // --- KẾT THÚC SỬA ---
+
                 selectedSongToAdd = null
                 _messageChannel.send("Đã thêm bài hát thành công!")
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = "Lỗi thêm nhạc: ${e.message}")
+                val msg = parseErrorMessage(e)
+                Log.d(TAG,msg)
+                _uiState.value = _uiState.value.copy(error = msg)
+
             }
         }
-    }
-    fun openDeleteDialog(playlist: PlaylistSummaryDTO) {
-        playlistToDelete = playlist
     }
 
     fun closeDeleteDialog() {
@@ -210,10 +255,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
-    fun logout() {
-        viewModelScope.launch {
-            authRepository.logout()
-            _messageChannel.send("Đã đăng xuất!")
+    private fun parseErrorMessage(e: Exception): String {
+        return if (e is retrofit2.HttpException && e.code() == 400) {
+            try {
+                val errorBody = e.response()?.errorBody()?.string()
+                val jsonObject = org.json.JSONObject(errorBody)
+                jsonObject.getString("message") // Lấy message từ Backend
+            } catch (e2: Exception) {
+                "Yêu cầu không hợp lệ"
+            }
+        } else {
+            e.message ?: "Lỗi không xác định"
         }
     }
 }

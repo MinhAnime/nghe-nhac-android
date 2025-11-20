@@ -1,6 +1,7 @@
 package com.example.nghenhac.ui.theme.player
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -109,12 +110,17 @@ fun FullScreenPlayer(
             text = nowPlaying.title?.toString() ?: "Không có tiêu đề",
             style = MaterialTheme.typography.headlineSmall,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            modifier = Modifier
+                .fillMaxWidth()
+                .basicMarquee()
         )
         Text(
             text = nowPlaying.artist?.toString() ?: "Không rõ nghệ sĩ",
             style = MaterialTheme.typography.bodyLarge,
-            maxLines = 1
+            maxLines = 1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .basicMarquee()
         )
         Spacer(modifier = Modifier.height(24.dp))
 

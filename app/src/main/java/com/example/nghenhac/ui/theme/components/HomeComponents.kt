@@ -82,3 +82,40 @@ fun AddToPlaylistSheet(
         }
     }
 }
+
+@Composable
+fun RenamePlaylistDialog(
+    currentName: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    // Khởi tạo giá trị ban đầu là tên cũ
+    var text by remember { mutableStateOf(currentName) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Đổi tên Playlist") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = { Text("Tên mới") },
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (text.isNotBlank() && text != currentName) {
+                    onConfirm(text)
+                } else {
+                    onDismiss() // Nếu tên không đổi hoặc rỗng thì đóng luôn
+                }
+            }) {
+                Text("Lưu")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Hủy") }
+        }
+    )
+}
