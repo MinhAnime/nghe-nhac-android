@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 // Data class để định nghĩa một mục trong menu
 data class MenuItemData(
     val text: String,
-    val icon: @Composable (() -> Unit)? = null, // Icon là tùy chọn
+    val icon: @Composable (() -> Unit)? = null,
     val onClick: () -> Unit
 )
 
@@ -24,7 +24,6 @@ fun MoreOptionsButton(
     var expanded by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
-        // 1. Nút 3 chấm
         IconButton(onClick = { expanded = true }) {
             Icon(
                 Icons.Default.MoreVert,
@@ -43,8 +42,8 @@ fun MoreOptionsButton(
                     text = { Text(item.text) },
                     leadingIcon = item.icon,
                     onClick = {
-                        expanded = false // Đóng menu
-                        item.onClick()   // Thực hiện hành động
+                        expanded = false
+                        item.onClick()
                     }
                 )
             }
