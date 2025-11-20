@@ -4,16 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -32,9 +31,9 @@ import com.example.nghenhac.repository.HomeRepository
 import com.example.nghenhac.ui.navigation.Screen
 import com.example.nghenhac.ui.theme.NgheNhacTheme
 import com.example.nghenhac.ui.theme.auth.AuthScreen
-import com.example.nghenhac.ui.theme.components.CreatePlaylistDialog // Import Dialog
+import com.example.nghenhac.ui.theme.components.CreatePlaylistDialog
 import com.example.nghenhac.ui.theme.home.HomeScreen
-import com.example.nghenhac.ui.theme.home.HomeViewModel // Import
+import com.example.nghenhac.ui.theme.home.HomeViewModel
 import com.example.nghenhac.ui.theme.home.PlaylistDetailScreen
 import com.example.nghenhac.ui.theme.player.BottomPlayerBar
 import com.example.nghenhac.ui.theme.player.FullScreenPlayer
@@ -48,6 +47,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        val splashScreen = installSplashScreen()
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -81,6 +83,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         } catch (e: Exception) {
+                            e.printStackTrace()
                             startDestination = "auth"
                         } finally {
                             withContext(Dispatchers.Main) { isLoading = false }
@@ -89,13 +92,13 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (isLoading) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                    splashScreen.setKeepOnScreenCondition {
+                        isLoading
                     }
                 } else {
                     val navController = rememberNavController()
                     val playerViewModel: SharedPlayerViewModel = viewModel()
-                    // 1. ĐƯA HOME VIEWMODEL RA NGOÀI ĐỂ MAIN ACTIVITY DÙNG ĐƯỢC
+
                     val homeViewModel: HomeViewModel = viewModel()
 
                     val playerState by playerViewModel.playerState.collectAsState()
@@ -104,12 +107,13 @@ class MainActivity : ComponentActivity() {
                     val isSheetVisible by playerViewModel.isPlayerSheetVisible.collectAsState()
                     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-                    // Logic Đăng xuất tự động (Giữ nguyên)
+                    // Logic Đăng xuất tự động
                     LaunchedEffect(Unit) {
                         AuthEvents.logoutFlow.collect {
                             tokenManager.deleteToken()
                             TokenHolder.token = null
-                            playerViewModel.pause()
+                            playerViewModel.clearData()
+                            homeViewModel.clearData()
                             navController.navigate("auth") { popUpTo(0) { inclusive = true } }
                         }
                     }
@@ -191,6 +195,14 @@ class MainActivity : ComponentActivity() {
                             // Auth
                             composable("auth") {
                                 AuthScreen(onLoginSuccess = {
+                                    playerViewModel.clearData()
+                                    homeViewModel.clearData()
+
+
+                                    if (!TokenHolder.token.isNullOrBlank()) {
+                                        homeViewModel.fetchAllHomeData()
+                                    } else {
+                                    }
                                     navController.navigate("home") { popUpTo("auth") { inclusive = true } }
                                 })
                             }
@@ -199,7 +211,6 @@ class MainActivity : ComponentActivity() {
                             composable(Screen.Home.route) {
                                 HomeScreen(
                                     playerViewModel = playerViewModel,
-                                    // Truyền homeViewModel đã tạo ở ngoài vào
                                     homeViewModel = homeViewModel,
                                     onPlaylistClick = { playlist ->
                                         navController.navigate("playlist/${playlist.id}")
@@ -211,7 +222,10 @@ class MainActivity : ComponentActivity() {
                             composable(Screen.Search.route) {
                                 com.example.nghenhac.ui.theme.search.SearchScreen(
                                     playerViewModel = playerViewModel,
-                                    onBackClick = { navController.popBackStack() }
+                                    onBackClick = { navController.popBackStack() },
+                                    onPlaylistClick = { playlistId ->
+                                        navController.navigate("playlist/$playlistId")
+                                    }
                                 )
                             }
 
