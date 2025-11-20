@@ -65,7 +65,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         homeRepository = HomeRepository(apiService)
         authRepository = AuthRepository(apiService, tokenManager)
 
-        fetchAllHomeData()
     }
 
     fun fetchAllHomeData() {
@@ -78,7 +77,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         isLastSongPage = false
 
 
-        _uiState.value = HomeUiState(isLoading = true) // Bắt đầu loading
+        _uiState.value = HomeUiState(isLoading = true)
 
         viewModelScope.launch {
             try {
@@ -98,8 +97,15 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 )
 
             } catch (e: Exception) {
-                // Xử lý lỗi (ví dụ: token hết hạn -> 401 Unauthorized)
-                _uiState.value = HomeUiState(isLoading = false, error = e.message)
+                e.printStackTrace()
+
+                val errorMsg = if (e is retrofit2.HttpException && e.code() == 403) {
+                    "Phiên đăng nhập hết hạn hoặc không hợp lệ."
+                } else {
+                    e.message ?: "Lỗi tải dữ liệu"
+                }
+
+                _uiState.value = HomeUiState(isLoading = false, error = errorMsg)
             }
         }
     }
@@ -224,28 +230,29 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun closeDeleteDialog() {
-        playlistToDelete = null}
-
-    fun deletePlaylist() {
-        val playlist = playlistToDelete ?: return
-
+    fun logout () {
         viewModelScope.launch {
-            try {
-                homeRepository.deletePlaylist(playlist.id)
 
-                val updatedList = _uiState.value.playlists.filter { it.id != playlist.id }
-                _uiState.value = _uiState.value.copy(playlists = updatedList)
+            authRepository.logout()
 
-                _messageChannel.send("Đã xóa playlist: ${playlist.name}")
-                closeDeleteDialog()
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = "Lỗi xóa: ${e.message}")
-                closeDeleteDialog()
-            }
+
+            _uiState.value = HomeUiState(
+                isLoading = true,
+                playlists = emptyList(),
+                songs = emptyList(),
+                error = null
+            )
+
+            currentPage = 0
+            isLastPage = false
+            isLoadingMore = false
+
+            currentSongPage = 0
+            isLastSongPage = false
+            isLoadingMoreSongs = false
+            _messageChannel.send("Đã đăng xuất!")
         }
     }
-
     fun openCreateDialog() { isCreatePlaylistDialogOpen = true }
     fun closeCreateDialog() { isCreatePlaylistDialogOpen = false }
 
@@ -267,5 +274,28 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         } else {
             e.message ?: "Lỗi không xác định"
         }
+    }
+
+    fun clearData() {
+
+        _uiState.value = HomeUiState(
+            isLoading = true,
+            playlists = emptyList(),
+            songs = emptyList(),
+            error = null
+        )
+
+        currentPage = 0
+        isLastPage = false
+        isLoadingMore = false
+
+        currentSongPage = 0
+        isLastSongPage = false
+        isLoadingMoreSongs = false
+
+        // 3. Reset các dialog
+        isCreatePlaylistDialogOpen = false
+        selectedSongToAdd = null
+        playlistToDelete = null
     }
 }
