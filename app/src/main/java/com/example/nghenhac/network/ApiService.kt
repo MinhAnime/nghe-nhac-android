@@ -8,6 +8,7 @@ import com.example.nghenhac.data.PlaylistDetailDTO
 import com.example.nghenhac.data.PlaylistSummaryDTO
 import com.example.nghenhac.data.RegisterRequest
 import com.example.nghenhac.data.RenamePlaylistRequest
+import com.example.nghenhac.data.SearchResponseDTO
 import com.example.nghenhac.data.SongResponseDTO
 import com.example.nghenhac.data.UserResponse
 import retrofit2.Response
@@ -69,12 +70,15 @@ interface ApiService {
         @Path("songId") songId: Long
     ): Any
 
-    @GET("/api/v1/songs/search")
-    suspend fun searchSongs(@Query("q") query: String): List<SongResponseDTO>
+    @GET("/api/v1/search")
+    suspend fun search(@Query("q") query: String): SearchResponseDTO
 
     @PUT("/api/v1/playlists/{playlistId}")
     suspend fun renamePlaylist(
         @Path("playlistId") playlistId: Long,
         @Body request: RenamePlaylistRequest
     ): Any
+
+    @PUT("/api/v1/playlists/{playlistId}/privacy")
+    suspend fun togglePrivacy(@Path("playlistId") playlistId: Long): Any
 }
