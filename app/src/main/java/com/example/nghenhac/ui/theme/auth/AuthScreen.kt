@@ -40,16 +40,15 @@ private enum class AuthTab {
 
 @Composable
 fun AuthScreen(
-    // (onLoginSuccess sẽ được gọi để điều hướng đến màn hình Home)
     onLoginSuccess: () -> Unit
 ) {
-    // Khởi tạo ViewModel
+
     val viewModel: AuthViewModel = viewModel()
 
-    // Theo dõi trạng thái (state) từ ViewModel
+
     val uiState by viewModel.uiState.collectAsState()
 
-    // Theo dõi xem đang ở tab nào
+
     var selectedTab by remember { mutableStateOf(AuthTab.LOGIN) }
 
     val context = LocalContext.current
@@ -69,8 +68,8 @@ fun AuthScreen(
     LaunchedEffect(uiState.registerSuccess) {
         if (uiState.registerSuccess) {
             Toast.makeText(context, "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_LONG).show()
-            selectedTab = AuthTab.LOGIN // Tự động chuyển về tab Login
-            viewModel.clearRegisterSuccess() // Reset lại cờ
+            selectedTab = AuthTab.LOGIN
+            viewModel.clearRegisterSuccess()
         }
     }
 
@@ -78,11 +77,10 @@ fun AuthScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-            viewModel.clearError() // Reset lỗi
+            viewModel.clearError()
         }
     }
 
-    // --- GIAO DIỆN UI (Sử dụng Material 3) ---
 
     Surface(
         modifier = Modifier.fillMaxSize(),
