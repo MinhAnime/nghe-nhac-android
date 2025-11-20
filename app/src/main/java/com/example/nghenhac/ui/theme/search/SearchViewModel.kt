@@ -64,6 +64,4 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
     }
-
-    // (Bạn có thể thêm các hàm openAddSongSheet nếu muốn dùng lại tính năng thêm nhạc tại đây)
 }
