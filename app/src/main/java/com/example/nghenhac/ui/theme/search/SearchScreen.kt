@@ -78,17 +78,14 @@ fun SearchScreen(
                     )
                 }
                 else -> {
-                    // Hiển thị kết quả
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         itemsIndexed(uiState.results) { index, song ->
                             SongListItem(
                                 song = song,
                                 onClick = {
-                                    // Phát nhạc từ danh sách tìm kiếm
                                     val mediaItems = convertSongsToMediaItems(uiState.results)
                                     playerViewModel.playQueue(mediaItems, index)
                                 },
-                                // (Tạm thời chưa có nút Add, bạn có thể thêm sau)
                             )
                         }
                     }
