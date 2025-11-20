@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nghenhac.data.PlaylistSummaryDTO // <-- Import DTO Playlist
 import com.example.nghenhac.data.SongResponseDTO
 import com.example.nghenhac.network.RetrofitClient
 import com.example.nghenhac.repository.HomeRepository
@@ -15,9 +16,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+// --- 1. CẬP NHẬT STATE (QUAN TRỌNG) ---
 data class SearchUiState(
     val isLoading: Boolean = false,
-    val results: List<SongResponseDTO> = emptyList(),
+    // Thay vì 'results', ta tách làm 2
+    val songs: List<SongResponseDTO> = emptyList(),
+    val playlists: List<PlaylistSummaryDTO> = emptyList(), // <-- DÒNG BẠN ĐANG THIẾU
     val error: String? = null
 )
 
@@ -27,6 +31,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState = _uiState.asStateFlow()
 
+    // Từ khóa tìm kiếm hiện tại
     var searchQuery by mutableStateOf("")
         private set
 
@@ -57,13 +62,22 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             // 2. Bắt đầu gọi API
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val results = repository.searchSongs(newQuery)
-                _uiState.value = SearchUiState(isLoading = false, results = results)
+                // Gọi API Search (Trả về SearchResponseDTO gồm cả songs và playlists)
+                val result = repository.search(newQuery)
+
+                // 3. Cập nhật UI với dữ liệu tách biệt
+                _uiState.value = SearchUiState(
+                    isLoading = false,
+                    songs = result.songs,
+                    playlists = result.playlists // <-- Gán dữ liệu vào đây
+                )
             } catch (e: Exception) {
                 _uiState.value = SearchUiState(isLoading = false, error = e.message)
             }
         }
     }
 
-    // (Bạn có thể thêm các hàm openAddSongSheet nếu muốn dùng lại tính năng thêm nhạc tại đây)
+    fun clearQuery() {
+        onQueryChange("")
+    }
 }
