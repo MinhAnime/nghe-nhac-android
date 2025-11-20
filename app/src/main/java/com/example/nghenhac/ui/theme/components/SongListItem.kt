@@ -2,17 +2,10 @@ package com.example.nghenhac.ui.theme.components
 
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ShapeDefaults
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -28,36 +21,32 @@ import com.example.nghenhac.R
 fun SongListItem(
     song: SongResponseDTO,
     onClick: () -> Unit,
-    menuItems: List<MenuItemData> = emptyList()
+    menuItems: List<MenuItemData> = emptyList(),
+    isCurrentSong: Boolean = false,
+    isPlaying: Boolean = false
 ) {
-    // 1. Giảm khoảng cách giữa các bài (từ 4.dp xuống 2.dp)
     Spacer(modifier = Modifier.height(2.dp))
 
-    ListItem(
-        headlineContent = {
-            Text(
-                text = song.title,
-                maxLines = 1,
-                // 2. Giảm cỡ chữ tiêu đề & làm đậm (bodyLarge thay vì titleMedium)
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium, // Làm đậm nhẹ để dễ đọc
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .basicMarquee()
-            )
-        },
-        supportingContent = {
-            Text(
-                text = song.artistName,
-                maxLines = 1,
-                // 3. Giảm cỡ chữ phụ (bodySmall thay vì bodyMedium)
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .basicMarquee()
-            )
-        },
-        leadingContent = {
+    // Màu chữ: Nếu đang phát thì dùng màu Primary, không thì dùng màu thường
+    val titleColor = if (isCurrentSong) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    val titleWeight = if (isCurrentSong) FontWeight.Bold else FontWeight.Medium
+
+    Surface(
+        shape = ShapeDefaults.Medium,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .height(60.dp)
+            .clip(ShapeDefaults.Medium)
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize().padding(end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            // 1. ẢNH BÌA (Bên trái - Giữ nguyên, không còn animation đè lên)
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(song.coverArtUrl)
@@ -68,22 +57,58 @@ fun SongListItem(
                 contentDescription = song.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    // 4. Giảm kích thước ảnh (từ 56.dp xuống 48.dp)
-                    .size(48.dp)
-                    .clip(ShapeDefaults.Small)
+                    .width(60.dp)
+                    .fillMaxHeight()
+                    .clip(ShapeDefaults.Medium)
             )
-        },
-        trailingContent = {
-            if (menuItems.isNotEmpty()) {
-                MoreOptionsButton(menuItems = menuItems)
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // 2. THÔNG TIN (Ở giữa)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = song.title,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = titleWeight,
+                    color = titleColor,
+                    modifier = Modifier.basicMarquee()
+                )
+                Text(
+                    text = song.artistName,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.basicMarquee()
+                )
             }
-        },
-        colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        ),
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .clip(ShapeDefaults.Medium)
-            .clickable(onClick = onClick)
-    )
+
+            // 3. PHẦN BÊN PHẢI (Animation + Menu)
+
+            // --- THÊM ANIMATION Ở ĐÂY ---
+            if (isCurrentSong) {
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Hiển thị sóng nhạc
+                AudioWaveAnimation(
+                    isPlaying = isPlaying,
+                    barColor = MaterialTheme.colorScheme.primary, // Màu xanh chủ đạo
+                    barWidth = 3.dp,
+                    maxHeight = 16.dp
+                )
+            }
+            // ----------------------------
+
+            // Menu 3 chấm
+            if (menuItems.isNotEmpty()) {
+                MoreOptionsButton(
+                    menuItems = menuItems,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
 }
