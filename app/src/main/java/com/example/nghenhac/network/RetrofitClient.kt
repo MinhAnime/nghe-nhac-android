@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit // Nên thêm timeout
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://192.168.1.14:8080/"
+    private const val BASE_URL = "https://api.minhduong.id.vn/"
 
     fun create(context: Context): ApiService {
 
