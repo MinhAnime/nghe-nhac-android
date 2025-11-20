@@ -1,5 +1,7 @@
 package com.example.nghenhac.ui.theme.home
 
+import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,8 +10,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlaylistAdd
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Share // <-- 1. IMPORT ICON SHARE
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.nghenhac.ui.theme.components.* // Import PlaylistCoverGrid, RenameDialog, MenuItemData...
+import com.example.nghenhac.ui.theme.components.*
 import com.example.nghenhac.ui.theme.player.SharedPlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,6 +38,9 @@ fun PlaylistDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    // Lấy trạng thái phát nhạc chung
+    val playerState by sharedPlayerViewModel.playerState.collectAsState()
 
     // State cho Menu 3 chấm trên TopBar
     var showMenu by remember { mutableStateOf(false) }
@@ -47,7 +55,6 @@ fun PlaylistDetailScreen(
                     }
                 },
                 actions = {
-                    // --- MENU 3 CHẤM CỦA PLAYLIST (GÓC TRÊN PHẢI) ---
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, "Tùy chọn")
                     }
@@ -55,6 +62,34 @@ fun PlaylistDetailScreen(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
+                        // --- 2. MỤC CHIA SẺ (THÊM MỚI) ---
+                        DropdownMenuItem(
+                            text = { Text("Chia sẻ") },
+                            leadingIcon = { Icon(Icons.Default.Share, null) },
+                            onClick = {
+                                showMenu = false
+                                // Gọi hàm chia sẻ (kiểm tra null cho chắc)
+                                uiState.playlist?.let { pl ->
+                                    sharePlaylist(context, pl.id, pl.name)
+                                }
+                            }
+                        )
+                        // --------------------------------
+                        val isPublic = uiState.playlist?.isPublic == true
+                        DropdownMenuItem(
+                            text = { Text(if (isPublic) "Riêng tư" else "Công khai") },
+                            leadingIcon = {
+                                Icon(
+                                    if (isPublic) Icons.Default.Lock else Icons.Default.Public,
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                viewModel.togglePrivacy() // Gọi hàm ViewModel
+                            }
+                        )
+
                         DropdownMenuItem(
                             text = { Text("Đổi tên") },
                             leadingIcon = { Icon(Icons.Default.Edit, null) },
@@ -88,7 +123,7 @@ fun PlaylistDetailScreen(
 
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
 
-                    // --- 1. HEADER: ẢNH & THÔNG TIN ---
+                    // --- HEADER ---
                     item {
                         Column(
                             modifier = Modifier
@@ -96,19 +131,13 @@ fun PlaylistDetailScreen(
                                 .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Ảnh Playlist (Dùng Grid 4 ảnh)
                             PlaylistCoverGrid(
                                 images = uiState.songs.mapNotNull { it.coverArtUrl }.take(4),
                                 modifier = Modifier
                                     .size(220.dp)
                                     .aspectRatio(1f)
-                                    .shadow(
-                                        elevation = 12.dp,
-                                        shape = MaterialTheme.shapes.medium
-                                    )
-                                    .clip(
-                                        shape = MaterialTheme.shapes.medium
-                                    )
+                                    .shadow(12.dp, MaterialTheme.shapes.medium)
+                                    .clip(MaterialTheme.shapes.medium)
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -127,7 +156,7 @@ fun PlaylistDetailScreen(
                         }
                     }
 
-                    // --- 2. DANH SÁCH BÀI HÁT ---
+                    // --- DANH SÁCH BÀI HÁT ---
                     item {
                         Text(
                             "Danh sách bài hát (${uiState.songs.size})",
@@ -138,18 +167,22 @@ fun PlaylistDetailScreen(
 
                     itemsIndexed(uiState.songs) { index, song ->
 
+                        val isCurrentSong = playerState.currentMediaId == song.id.toString()
+                        val isPlaying = playerState.isPlaying
+
                         SongListItem(
                             song = song,
                             onClick = { viewModel.onSongSelected(index, sharedPlayerViewModel) },
 
+                            isCurrentSong = isCurrentSong,
+                            isPlaying = isPlaying,
+
                             menuItems = listOf(
-                                // Item 1: Thêm vào playlist khác
                                 MenuItemData(
                                     text = "Thêm vào Playlist khác",
                                     icon = { Icon(Icons.Default.PlaylistAdd, null) },
                                     onClick = { viewModel.openAddSongSheet(song) }
                                 ),
-                                // Item 2: Xóa khỏi playlist này
                                 MenuItemData(
                                     text = "Xóa khỏi Playlist này",
                                     icon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
@@ -157,7 +190,6 @@ fun PlaylistDetailScreen(
                                 )
                             )
                         )
-                        // ---------------------------------------
 
                         if (index >= uiState.songs.size - 1 && !viewModel.isLastPage && !viewModel.isLoadingMore) {
                             LaunchedEffect(Unit) { viewModel.loadMore() }
@@ -177,7 +209,7 @@ fun PlaylistDetailScreen(
             }
         }
 
-        // --- CÁC DIALOG XỬ LÝ ---
+        // --- CÁC DIALOG ---
 
         if (viewModel.showRenameDialog) {
             RenamePlaylistDialog(
@@ -218,4 +250,17 @@ fun PlaylistDetailScreen(
             )
         }
     }
+}
+
+// --- 3. HÀM CHIA SẺ (HELPER) ---
+fun sharePlaylist(context: Context, playlistId: Long, playlistName: String) {
+    val deepLink = "https://api.minhduong.id.vn/playlist/$playlistId"
+    val shareText = "Nghe playlist \"$playlistName\" cực hay này nè:\n$deepLink"
+
+    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, shareText)
+    }
+    val shareIntent = Intent.createChooser(sendIntent, "Chia sẻ playlist qua...")
+    context.startActivity(shareIntent)
 }
