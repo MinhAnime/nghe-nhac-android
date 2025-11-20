@@ -5,10 +5,23 @@ import com.example.nghenhac.data.CreatePlaylistRequest
 import com.example.nghenhac.data.PlaylistDetailDTO
 import com.example.nghenhac.data.PlaylistSummaryDTO
 import com.example.nghenhac.data.RenamePlaylistRequest
+import com.example.nghenhac.data.SearchResponseDTO
 import com.example.nghenhac.data.SongResponseDTO
+import com.example.nghenhac.data.TokenHolder
 import com.example.nghenhac.network.ApiService
+import kotlinx.coroutines.delay
 
 class HomeRepository(private  val apiService: ApiService) {
+
+
+    private suspend fun ensureToken() {
+        if (TokenHolder.token.isNullOrBlank()) {
+            delay(500)
+            if (TokenHolder.token.isNullOrBlank()) {
+                throw Exception("Token chưa sẵn sàng. Vui lòng đăng nhập lại.")
+            }
+        }
+    }
     suspend fun getMyPlaylists(page: Int = 0): List<PlaylistSummaryDTO> {
         return apiService.getMyPlaylists(page = page)
     }
@@ -20,9 +33,9 @@ class HomeRepository(private  val apiService: ApiService) {
         return apiService.getPlaylistDetails(playlistId)
     }
 
-    suspend fun createPlaylist(name: String): PlaylistSummaryDTO { // <-- Trả về DTO
+    suspend fun createPlaylist(name: String): PlaylistSummaryDTO {
         val request = CreatePlaylistRequest(name)
-        return apiService.createPlaylist(request) // Return kết quả từ API
+        return apiService.createPlaylist(request)
     }
 
     suspend fun addSongToPlaylist(playlistId: Long, songId: Long) {
@@ -55,13 +68,17 @@ class HomeRepository(private  val apiService: ApiService) {
     suspend fun removeSongFromPlaylist(playlistId: Long, songId: Long) {
         apiService.removeSongFromPlaylist(playlistId, songId)
     }
-    suspend fun searchSongs(query: String): List<SongResponseDTO> {
-        return apiService.searchSongs(query)
+    suspend fun search(query: String): SearchResponseDTO {
+        return apiService.search(query)
     }
 
     suspend fun renamePlaylist(playlistId: Long, newName: String) {
         val request = RenamePlaylistRequest(newName)
         apiService.renamePlaylist(playlistId, request)
+    }
+
+    suspend fun togglePrivacy(playlistId: Long) {
+        apiService.togglePrivacy(playlistId)
     }
 
 
