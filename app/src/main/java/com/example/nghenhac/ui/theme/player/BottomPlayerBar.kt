@@ -33,7 +33,6 @@ fun BottomPlayerBar(
     val nowPlaying = playerState.nowPlaying ?: return
 
     // --- 1. MÀU SẮC ---
-    // Lấy màu chủ đạo từ ảnh bìa (nếu có), nếu không dùng màu xám tối (giống Spotify)
     val backgroundColor = playerState.dominantColor ?: Color(0xFF2C2C2C)
 
     // Màu chữ luôn là màu sáng để nổi trên nền tối
@@ -48,8 +47,8 @@ fun BottomPlayerBar(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp) // Tạo khoảng hở để nó "nổi" lên
-            .height(64.dp) // Chiều cao cố định giống Spotify
+            .padding(8.dp)
+            .height(64.dp)
             .clickable { onBarClicked() },
         shape = RoundedCornerShape(8.dp), // Bo góc 8dp
         colors = CardDefaults.cardColors(
@@ -57,7 +56,6 @@ fun BottomPlayerBar(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        // Dùng Box để xếp chồng Thanh tiến trình lên dưới cùng
         Box(modifier = Modifier.fillMaxSize()) {
 
             // --- NỘI DUNG CHÍNH (Hàng ngang) ---

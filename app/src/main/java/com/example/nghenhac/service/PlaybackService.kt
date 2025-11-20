@@ -66,8 +66,7 @@ class PlaybackService : MediaSessionService() {
             }
         }
 
-        // 3. Đưa "Lớp vỏ" (customPlayer) vào MediaSession
-        // Thay vì đưa exoPlayer trực tiếp
+
         mediaSession = MediaSession.Builder(this, customPlayer).build()
     }
 
