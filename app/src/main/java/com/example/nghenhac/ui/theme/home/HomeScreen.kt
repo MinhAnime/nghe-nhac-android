@@ -1,40 +1,27 @@
 package com.example.nghenhac.ui.theme.home
 
 import android.widget.Toast
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.PlaylistAdd
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.* // Import getValue, collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.example.nghenhac.R
 import com.example.nghenhac.data.PlaylistSummaryDTO
 import com.example.nghenhac.ui.theme.components.AddToPlaylistSheet
 import com.example.nghenhac.ui.theme.components.CreatePlaylistDialog
 import com.example.nghenhac.ui.theme.components.MenuItemData
-import com.example.nghenhac.ui.theme.components.MoreOptionsButton
 import com.example.nghenhac.ui.theme.components.PlaylistCard
-import com.example.nghenhac.ui.theme.components.RenamePlaylistDialog
 import com.example.nghenhac.ui.theme.components.SongListItem
 import com.example.nghenhac.ui.theme.player.SharedPlayerViewModel
 import com.example.nghenhac.ui.theme.player.convertSongsToMediaItems
@@ -47,7 +34,17 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = viewModel(),
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
+    val playerState by playerViewModel.playerState.collectAsState()
+    // -----------------------------------
+
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        if (uiState.playlists.isEmpty() && uiState.songs.isEmpty()) {
+            homeViewModel.fetchAllHomeData()
+        }
+    }
+
 
     // Xử lý lỗi
     LaunchedEffect(uiState.error) {
@@ -99,10 +96,7 @@ fun HomeScreen(
                         Text(
                             text = "Playlist của bạn",
                             style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.padding(start = 16.dp,
-                                end = 16.dp,
-                                top = 1.dp,
-                                bottom = 8.dp)
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 1.dp, bottom = 8.dp)
                         )
                     }
 
@@ -157,6 +151,14 @@ fun HomeScreen(
                         }
                     } else {
                         itemsIndexed(uiState.songs) { index, song ->
+
+                            // --- SỬA LỖI LOGIC TẠI ĐÂY ---
+                            // Dùng 'playerState' đã collect ở trên để so sánh
+                            // Điều này giúp UI tự động cập nhật khi bài hát đổi
+                            val isCurrentSong = playerState.currentMediaId == song.id.toString()
+                            val isPlaying = playerState.isPlaying
+                            // ----------------------------
+
                             SongListItem(
                                 song = song,
                                 onClick = {
@@ -171,8 +173,10 @@ fun HomeScreen(
                                         text = "Thêm vào Playlist",
                                         icon = { Icon(Icons.Default.PlaylistAdd, null) },
                                         onClick = { homeViewModel.openAddSongSheet(song) }
-                                    )
-                                )
+                                    ),
+                                ),
+                                isCurrentSong = isCurrentSong,
+                                isPlaying = isPlaying // Giờ biến này đã hợp lệ
                             )
 
                             // Logic tải thêm bài hát (Infinite Scroll)
