@@ -87,6 +87,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.2")
 
     implementation("androidx.palette:palette-ktx:1.0.0")
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
 
 
 
