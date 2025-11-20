@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import com.example.nghenhac.data.PlayerEvents
 import com.example.nghenhac.network.RetrofitClient
 import com.example.nghenhac.repository.HomeRepository
 import com.example.nghenhac.services.PlaybackService
@@ -115,6 +116,15 @@ class SharedPlayerViewModel(application: Application) : AndroidViewModel(applica
         initializeMediaController()
 
         startPositionPolling()
+
+        viewModelScope.launch {
+            PlayerEvents.eventFlow.collect { event ->
+                when (event) {
+                    is PlayerEvents.Event.Next -> next()
+                    is PlayerEvents.Event.Previous -> previous()
+                }
+            }
+        }
     }
 
     private fun initializeMediaController() {
@@ -307,11 +317,13 @@ class SharedPlayerViewModel(application: Application) : AndroidViewModel(applica
         _isPlayerSheetVisible.value = false
     }
 
-    override fun onCleared() {
-        mediaController?.removeListener(controllerListener)
-        mediaController?.release()
-        super.onCleared()
+    fun clearData() {
+        mediaController?.stop()
+        mediaController?.clearMediaItems()
+        _playerState.value = PlayerState()
+        originalQueue = emptyList()
+        currentQueue = emptyList()
+        currentIndex = -1
     }
-
 
 }
