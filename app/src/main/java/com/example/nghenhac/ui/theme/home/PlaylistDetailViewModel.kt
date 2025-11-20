@@ -240,4 +240,26 @@ class PlaylistDetailViewModel(
 
     fun openAddSongSheet(song: SongResponseDTO) { selectedSongToAdd = song }
     fun closeAddSongSheet() { selectedSongToAdd = null }
+
+    fun togglePrivacy() {
+        viewModelScope.launch {
+            try {
+                // 1. Gọi API
+                repository.togglePrivacy(playlistId)
+
+                // 2. Cập nhật UI ngay lập tức (Đảo ngược giá trị hiện tại)
+                val currentPlaylist = _uiState.value.playlist
+                if (currentPlaylist != null) {
+                    // Tạo bản sao với giá trị isPublic ngược lại
+                    val newStatus = !currentPlaylist.isPublic
+                    val updatedPlaylist = currentPlaylist.copy(isPublic = newStatus)
+
+                    _uiState.value = _uiState.value.copy(playlist = updatedPlaylist)
+                }
+            } catch (e: Exception) {
+                // Nếu lỗi, hiện thông báo
+                _uiState.value = _uiState.value.copy(error = "Lỗi đổi quyền: ${e.message}")
+            }
+        }
+    }
 }
